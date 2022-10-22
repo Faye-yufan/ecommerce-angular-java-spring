@@ -8,3 +8,6 @@ git clone https://github.com/Faye-yufan/ecommerce-angular-java-spring.git
 ```
 - Run backend with your IDE
 - Run frontend with `ng serve`
+
+## Recent Update
+Release 2.0
