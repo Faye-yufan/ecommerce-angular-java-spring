@@ -1,9 +1,6 @@
 package com.fayeyufan.ecommerce.config;
 
-import com.fayeyufan.ecommerce.entity.Country;
-import com.fayeyufan.ecommerce.entity.Product;
-import com.fayeyufan.ecommerce.entity.ProductCategory;
-import com.fayeyufan.ecommerce.entity.State;
+import com.fayeyufan.ecommerce.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -38,12 +35,12 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
 
         // disable HTTP methods for Product: PUT, POST, DELETE
         disableHttpMethods(Product.class, config, theUnsupportedActions);
-        // disable HTTP methods for ProductCategory: PUT, POST, DELETE
         disableHttpMethods(ProductCategory.class, config, theUnsupportedActions);
-        // disable HTTP methods for Country: PUT, POST, DELETE
         disableHttpMethods(Country.class, config, theUnsupportedActions);
-        // disable HTTP methods for State: PUT, POST, DELETE
         disableHttpMethods(State.class, config, theUnsupportedActions);
+        disableHttpMethods(Order.class, config, theUnsupportedActions);
+
+
         // call an internal helper method
         exposeIds(config);
 
