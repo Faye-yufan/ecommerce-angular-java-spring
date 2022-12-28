@@ -159,7 +159,7 @@ export class CheckoutComponent implements OnInit {
     var element = this.stripe.elements();
 
     // Create a card element ... and hide the zipCode field
-    this.cardElement = element.create('card', {hidePostCode: true});
+    this.cardElement = element.create('card', {hidePostalCode: true});
 
     // Add an instance of card UI component into the 'card-element' div
     this.cardElement.mount('#card-element');
@@ -320,21 +320,51 @@ export class CheckoutComponent implements OnInit {
     purchase.order = order;
     purchase.orderItems = orderItems;
 
-    // call REST API via the checkoutService
-    this.checkoutService.placeOrder(purchase).subscribe(
-      {
-        next: response => {
-          alert(`Your order has been received.\nOrder tracking number: ${response.orderTrackingNumber}`);
+    // compute payment info
+    this.paymentInfo.amount = this.totalPrice * 100;
+    this.paymentInfo.currency = "USD";
 
-          // reset cart
-          this.resetCart();
-        },
-        error: err => {
-          alert(`There was an error: ${err.message}`);
+
+    // if valid form then
+    // - create payment intent
+    // - confirm card payment
+    // - place order
+
+    if (!this.checkoutFormGroup.invalid && this.displayError.textContent === "") {
+
+      this.checkoutService.createPaymentIntent(this.paymentInfo).subscribe(
+        (paymentIntentResponse) => {
+          this.stripe.confirmCardPayment(paymentIntentResponse.client_secret,
+            {
+              payment_method: {
+                card: this.cardElement
+              }
+            }, { handleActions: false})
+          .then((result: any) => {
+            if (result.error) {
+              // inform the customer there was an error
+              alert(`There was an error: ${result.error.messsage}`);
+            } else {
+              // call REST API via the CheckoutService
+              this.checkoutService.placeOrder(purchase).subscribe({
+                next: (response: any) => {
+                  alert(`Your order has been received. \nOrder tracking number: ${response.orderTrackingNumber}`);
+
+                  // reset cart
+                  this.resetCart();
+                },
+                error: (err: any) => {
+                  alert(`There was an error: ${err.message}`);
+                }
+              })
+            }
+          });
         }
-
-      }
-    )
+      );
+    } else {
+      this.checkoutFormGroup.markAllAsTouched();
+      return;
+    }
 
   }
   
