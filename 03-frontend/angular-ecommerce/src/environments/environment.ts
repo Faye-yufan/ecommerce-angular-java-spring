@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  fayeBeautyApiUrl: "https://localhost:8443/api"
+  fayeBeautyApiUrl: "https://localhost:8443/api",
+  stripePublishableKey: "pk_test_51MGGUYDg4pnQhzTUn76u2QWVbZpXuGARvJ22dGNqxCxBSrsIESz0PCrmebme3tt7TgMam6BYrbNzWjOWgPFcVptl00ur4FZ0SD"
 };
 
 /*

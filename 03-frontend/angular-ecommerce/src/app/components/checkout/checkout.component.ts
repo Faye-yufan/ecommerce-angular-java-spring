@@ -4,12 +4,14 @@ import { provideRouter, Router } from '@angular/router';
 import { Country } from 'src/app/common/country';
 import { Order } from 'src/app/common/order';
 import { OrderItem } from 'src/app/common/order-item';
+import { PaymentInfo } from 'src/app/common/payment-info';
 import { Purchase } from 'src/app/common/purchase';
 import { State } from 'src/app/common/state';
 import { BeautyShopFormService } from 'src/app/services/beauty-shop-form.service';
 import { CartService } from 'src/app/services/cart.service';
 import { CheckoutService } from 'src/app/services/checkout.service';
 import { BeautyShopValidators } from 'src/app/validators/beauty-shop-validators';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-checkout',
@@ -32,6 +34,13 @@ export class CheckoutComponent implements OnInit {
   billingAddressStates: State[] = [];
 
   storage: Storage = sessionStorage;
+
+  // initialize Stripe API
+  stripe = Stripe(environment.stripePublishableKey);
+
+  paymentInfo: PaymentInfo = new PaymentInfo();
+  cardElement: any;
+  displayError: any = "";
   
   constructor(private formBuilder: FormBuilder,
               private beautyShopFormService: BeautyShopFormService,
@@ -40,6 +49,9 @@ export class CheckoutComponent implements OnInit {
               private router: Router) { }
 
   ngOnInit(): void {
+
+    // setup Stripe payment form
+    this.setupStripePaymentForm();
 
     this.reviewCartDetails();
 
@@ -94,18 +106,19 @@ export class CheckoutComponent implements OnInit {
                                 BeautyShopValidators.notOnlyWhitespace])
       }),
       creditCard: this.formBuilder.group({
-        cardType: new FormControl('', [Validators.required]),
-        nameOnCard: new FormControl('', 
-                                    [Validators.required, 
-                                    Validators.minLength(2), 
-                                    BeautyShopValidators.notOnlyWhitespace]),
-        cardNumber: new FormControl('', [Validators.required, Validators.pattern('[0-9]{16}')]),
-        securityCode: new FormControl('', [Validators.required, Validators.pattern('[0-9]{3}')]),
-        expirationMonth: [''],
-        expirationYear: ['']
+        // cardType: new FormControl('', [Validators.required]),
+        // nameOnCard: new FormControl('', 
+        //                             [Validators.required, 
+        //                             Validators.minLength(2), 
+        //                             BeautyShopValidators.notOnlyWhitespace]),
+        // cardNumber: new FormControl('', [Validators.required, Validators.pattern('[0-9]{16}')]),
+        // securityCode: new FormControl('', [Validators.required, Validators.pattern('[0-9]{3}')]),
+        // expirationMonth: [''],
+        // expirationYear: ['']
       })
     });
 
+    /*
     // populate credit card months
 
     const startMonth: number = new Date().getMonth() + 1;
@@ -127,6 +140,7 @@ export class CheckoutComponent implements OnInit {
         this.creditCardYears = data;
       }
     )
+    */
 
     // populate countries
 
@@ -137,6 +151,32 @@ export class CheckoutComponent implements OnInit {
       }
     )
 
+  }
+
+  setupStripePaymentForm() {
+    
+    // get a handle to stripe elements
+    var element = this.stripe.elements();
+
+    // Create a card element ... and hide the zipCode field
+    this.cardElement = element.create('card', {hidePostCode: true});
+
+    // Add an instance of card UI component into the 'card-element' div
+    this.cardElement.mount('#card-element');
+
+    // Add event binding for the 'change' envent on the card element
+    this.cardElement.on('change', (event: any) => {
+
+      // get a handle to card-errors element
+      this.displayError = document.getElementById('card-errors');
+
+      if (event.complete) {
+        this.displayError.textContent = "";
+      } else if (event.error) {
+        // show validation error to customer
+        this.displayError.textContent = event.error.message;
+      }
+    });
   }
 
   reviewCartDetails() {
